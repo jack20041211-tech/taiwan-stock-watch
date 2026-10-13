@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102a26">
+<title>台股觀測站</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1418;--panel:#132228;--panel2:#1a2d33;--text:#eef6f5;--muted:#9bb0b4;--line:#294047;--green:#62d5a6;--red:#ff7b7b;--gold:#ffd479}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#102a26,#0b1418 280px);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:900px;margin:auto;padding:18px 14px 48px}.hero{padding:16px 4px 18px}.eyebrow{color:var(--green);font-size:12px;letter-spacing:.14em;font-weight:800}.hero h1{margin:7px 0;font-size:29px}.hero p{color:var(--muted);margin:0;line-height:1.55}
+.notice{border:1px solid #6d5932;background:#2b2519;color:#ffe4ad;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;margin:10px 0 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat,.panel{background:rgba(19,34,40,.94);border:1px solid var(--line);border-radius:16px;padding:13px}.stat span{display:block;color:var(--muted);font-size:12px}.stat b{display:block;font-size:22px;margin-top:5px}
+nav{display:flex;gap:8px;overflow:auto;margin:18px 0 14px}button,select,input{font:inherit}button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:11px;padding:10px 13px;cursor:pointer}button.active{background:var(--green);color:#08251c;border-color:var(--green);font-weight:800}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}input,select{width:100%;min-width:0;background:#0d1b20;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px}
+.section-title{font-size:18px;margin:17px 0 10px}.sector-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.sector{padding:14px;text-align:left;min-height:88px}.sector strong{display:block;font-size:15px}.sector small{display:block;color:var(--muted);margin-top:6px;line-height:1.4}
+.stock{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:13px;margin:9px 0}.stocktop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.stock h3{font-size:16px;margin:0 0 5px}.muted{color:var(--muted);font-size:12px}.tag{display:inline-block;border:1px solid #47615f;border-radius:20px;padding:4px 8px;color:var(--green);font-size:11px;white-space:nowrap}.stockmeta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.stockmeta div{background:#0d1b20;border-radius:9px;padding:9px}.stockmeta span{display:block;color:var(--muted);font-size:11px}.stockmeta b{display:block;margin-top:4px;font-size:13px}.actions{display:flex;gap:8px;margin-top:10px}.actions button{flex:1;font-size:13px}.save.saved{border-color:var(--green);color:var(--green)}
+.rules{display:grid;gap:9px}.rule{padding:12px;background:#0d1b20;border-radius:11px;line-height:1.5}.rule b{display:block;margin-bottom:4px}.rule small{color:var(--muted)}
+footer{margin-top:22px;color:var(--muted);font-size:12px;line-height:1.6}.empty{color:var(--muted);padding:22px;text-align:center}
+@media(min-width:640px){.sector-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.controls{grid-template-columns:2fr 1fr 1fr}.stocklist{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stock{margin:0}}
+</style>
+</head>
+<body><main>
+<header class="hero"><div class="eyebrow">TAIWAN STOCK WATCH</div><h1>台股觀測站</h1><p>產業輪動・自選清單・波段價差觀察</p></header>
+<div class="notice">行情尚未連線：本工具不會假裝顯示即時股價。請把它當成自選股整理與波段觀察筆記；價格欄位可自行填寫，之後再串接合規資料來源。</div>
+<div class="stats"><div class="stat"><span>已收藏股票</span><b id="savedCount">0</b></div><div class="stat"><span>追蹤產業</span><b id="sectorCount">12</b></div><div class="stat"><span>觀察週期</span><b>3–20 日</b></div></div>
+<nav><button class="active" data-page="watch">波段觀察</button><button data-page="sectors">產業總覽</button><button data-page="saved">我的自選</button><button data-page="rules">判讀規則</button></nav>
+<section id="content"></section>
+<footer>注意：此網站僅供個人研究與紀錄，不是投資建議。產業分類為觀察用途，部分公司可能跨產業。請自行確認公司最新業務與行情。收藏、備註及自填價格儲存在此瀏覽器的本機儲存空間；清除網站資料可能使其消失。</footer>
+</main>
+<script>
+const groups=[
+{name:"半導體｜晶圓製造",stocks:[["2330","台積電"],["2303","聯電"],["6770","力積電"],["2342","茂矽"],["2363","矽統"]]},
+{name:"記憶體",stocks:[["2408","南亞科"],["2344","華邦電"],["2337","旺宏"]]},
+{name:"半導體｜封測、測試",stocks:[["8150","南茂"],["8131","福懋科"],["8110","華東"],["3374","精材"],["2369","菱生"]]},
+{name:"IC設計、功率元件",stocks:[["3443","創意"],["3006","晶豪科"],["5351","鈺創"],["2481","強茂"],["5425","台半"],["3675","德微"],["3707","漢磊"],["6742","澤米"]]},
+{name:"伺服器、電腦、電子製造",stocks:[["2317","鴻海"],["2382","廣達"],["3231","緯創"],["2324","仁寶"],["2312","金寶"],["8210","勤誠"],["2425","承啟"]]},
+{name:"PCB、載板、電子零組件",stocks:[["2383","台光電"],["8046","南電"],["4958","臻鼎-KY"],["3026","禾伸堂"],["2327","國巨"],["3665","貿聯-KY"],["3021","鴻名"],["3550","聯穎"],["5328","華容"],["6191","精成科"]]},
+{name:"散熱、電源、機電",stocks:[["3017","奇鋐"],["8996","高力"],["3653","健策"],["6282","康舒"],["2301","光寶科"],["4576","大銀微系統"],["2049","上銀"],["1609","大亞"],["8261","富鼎"]]},
+{name:"面板、光學、光電、LED",stocks:[["6116","彩晶"],["3481","群創"],["3406","玉晶光"],["3008","大立光"],["3362","先進光"],["3234","光環"],["4979","華星光"],["4956","光鋐"],["2340","台亞"],["2489","瑞軒"]]},
+{name:"通訊、射頻、電子訊號",stocks:[["2485","兆赫"],["2484","希華"],["6432","今展科"]]},
+{name:"矽晶圓、半導體材料",stocks:[["3532","台勝科"],["6182","合晶"],["5483","中美晶"],["6488","環球晶"]]},
+{name:"塑化、紡織、玻璃",stocks:[["1303","南亞"],["1326","台化"],["6505","台塑化"],["1409","新纖"],["1802","台玻"]]},
+{name:"儲存設備與其他電子",stocks:[["3060","銘異"],["2495","普安"]]},
+{name:"ETF／槓桿型商品",stocks:[["00631L","元大台灣50正2"]]}
+];
+const all=[];const seen=new Set();groups.forEach(g=>g.stocks.forEach(s=>{if(!seen.has(s[0])){seen.add(s[0]);all.push({code:s[0],name:s[1],sector:g.name})}}));
+const key="twStockWatch_v1";let store={saved:["2330","2408","2382"],notes:{},prices:{}};
+try{const old=JSON.parse(localStorage.getItem(key)||"null");if(old)store={...store,...old}}catch(e){}
+let page="watch",sectorFilter="全部產業",query="";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function persist(){try{localStorage.setItem(key,JSON.stringify(store))}catch(e){}}
+function updateStats(){document.getElementById("savedCount").textContent=store.saved.length;document.getElementById("sectorCount").textContent=groups.length}
+function setPage(p){page=p;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===p));render()}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>setPage(b.dataset.page));
+function render(){
+updateStats();const root=document.getElementById("content");
+if(page==="rules"){root.innerHTML=`<h2 class="section-title">波段觀察判讀規則</h2><div class="rules"><div class="rule"><b>📈 轉強觀察</b><small>股價站上 20 日均線、5 日均線走強，並有成交量配合。這是篩選條件，不代表必然上漲。</small></div><div class="rule"><b>↩️ 拉回觀察</b><small>趨勢尚在時回檔、量能縮小，再觀察是否止跌，不要只因下跌就認定便宜。</small></div><div class="rule"><b>🛡️ 風險警示</b><small>跌破重要支撐、放量下跌或短期漲幅過大時，重新檢查風險與部位。</small></div><div class="rule"><b>🏭 產業輪動</b><small>比較同族群股票的趨勢與成交量，避免只看單一檔。留意消息面與整體市場風險。</small></div></div>`;return}
+if(page==="sectors"){root.innerHTML=`<h2 class="section-title">產業總覽</h2><div class="sector-grid">${groups.map((g,i)=>`<button class="sector" data-g="${i}"><strong>${esc(g.name)}</strong><small>${g.stocks.length} 檔 · ${g.stocks.slice(0,3).map(s=>esc(s[1])).join("、")}</small></button>`).join("")}</div>`;root.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{sectorFilter=groups[+b.dataset.g].name;page="watch";document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.page==="watch"));render()});return}
+const sectors=["全部產業",...groups.map(g=>g.name)];
+const list=all.filter(s=>(page!=="saved"||store.saved.includes(s.code))&&(sectorFilter==="全部產業"||s.sector===sectorFilter)&&(!query||(s.name+s.code).toLowerCase().includes(query.toLowerCase())));
+root.innerHTML=`<h2 class="section-title">${page==="saved"?"我的自選股":"波段觀察清單"}</h2><div class="controls"><input id="q" placeholder="搜尋股票名稱或代號" value="${esc(query)}"><select id="sector">${sectors.map(s=>`<option ${s===sectorFilter?"selected":""}>${esc(s)}</option>`).join("")}</select><button id="reset">清除篩選</button></div><div class="stocklist">${list.map(s=>{let p=store.prices[s.code]||"";return `<article class="stock"><div class="stocktop"><div><h3>${esc(s.name)} <span class="muted">${esc(s.code)}</span></h3><div class="muted">${esc(s.sector)}</div></div><span class="tag">自行觀察</span></div><div class="stockmeta"><label><span>自填觀察價格（非即時）</span><input inputmode="decimal" data-price="${s.code}" placeholder="輸入價格" value="${esc(p)}"></label><label><span>備註／觀察條件</span><input data-note="${s.code}" placeholder="例如：站上20日線" value="${esc(store.notes[s.code]||"")}"></label></div><div class="actions"><button class="save ${store.saved.includes(s.code)?"saved":""}" data-save="${s.code}">${store.saved.includes(s.code)?"✓ 已收藏":"＋ 加入自選"}</button><button data-copy="${s.code}">複製代號</button></div></article>`}).join("")||`<div class="empty">沒有符合條件的股票</div>`}</div>`;
+document.getElementById("q").oninput=e=>{query=e.target.value;const pos=e.target.selectionStart;render();const el=document.getElementById("q");el.focus();el.setSelectionRange(pos,pos)};
+document.getElementById("sector").onchange=e=>{sectorFilter=e.target.value;render()};
+document.getElementById("reset").onclick=()=>{query="";sectorFilter="全部產業";render()};
+root.querySelectorAll("[data-save]").forEach(b=>b.onclick=()=>{const c=b.dataset.save;store.saved=store.saved.includes(c)?store.saved.filter(x=>x!==c):[...store.saved,c];persist();render()});
+root.querySelectorAll("[data-price]").forEach(el=>el.onchange=()=>{store.prices[el.dataset.price]=el.value;persist();updateStats()});
+root.querySelectorAll("[data-note]").forEach(el=>el.onchange=()=>{store.notes[el.dataset.note]=el.value;persist()});
+root.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);b.textContent="已複製"}catch(e){b.textContent=b.dataset.copy}});
+}
+render();
+</script></body></html>
